@@ -42,9 +42,8 @@ import java.util.TimeZone;
  */
 public class MyWatchFace extends CanvasWatchFaceService {
 
-    /*
-     * Updates rate in milliseconds for interactive mode. We update once a second to advance the
-     * second hand.
+    /**
+     * Updates rate in milliseconds for interactive mode. We update at 60FPS
      */
     private static final long INTERACTIVE_UPDATE_RATE_MS = 16;
 
@@ -118,6 +117,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
         private Paint mMinutePaint;
         private Paint mBigSecondPaint;
         private Paint mTickAndCirclePaint;
+        private Paint mBigTickPaint;
         private Paint mBackgroundPaint;
         private Bitmap mBackgroundBitmap;
         private Bitmap mGrayBackgroundBitmap;
@@ -188,6 +188,12 @@ public class MyWatchFace extends CanvasWatchFaceService {
             mTickAndCirclePaint.setAntiAlias(true);
             mTickAndCirclePaint.setStyle(Paint.Style.STROKE);
 
+            mBigTickPaint = new Paint();
+            mBigTickPaint.setColor(mWatchHandColor);
+            mBigTickPaint.setStrokeWidth(SECOND_STROKE_WIDTH);
+            mBigTickPaint.setAntiAlias(true);
+            mBigTickPaint.setStyle(Paint.Style.STROKE);
+
             if (SHADOW_RADIUS > 0)
             {
                 mHourPaint.setShadowLayer(SHADOW_RADIUS, 0, 0, mWatchHandShadowColor);
@@ -229,38 +235,27 @@ public class MyWatchFace extends CanvasWatchFaceService {
         }
 
         private void updateWatchHandStyle() {
+
+            Paint[] paints = new Paint[]{ mHourPaint, mMinutePaint, mBigSecondPaint, mTickAndCirclePaint, mBigTickPaint};
             if (mAmbient) {
-                mHourPaint.setColor(Color.WHITE);
-                mMinutePaint.setColor(Color.WHITE);
-                mBigSecondPaint.setColor(Color.WHITE);
-                mTickAndCirclePaint.setColor(Color.WHITE);
-
-                mHourPaint.setAntiAlias(false);
-                mMinutePaint.setAntiAlias(false);
-                mBigSecondPaint.setAntiAlias(false);
-                mTickAndCirclePaint.setAntiAlias(false);
-
-                mHourPaint.clearShadowLayer();
-                mMinutePaint.clearShadowLayer();
-                mBigSecondPaint.clearShadowLayer();
-                mTickAndCirclePaint.clearShadowLayer();
-
+                for (Paint p : paints)
+                {
+                    p.setColor(Color.WHITE);
+                    p.setAntiAlias(false);
+                    p.clearShadowLayer();
+                }
             } else {
                 mHourPaint.setColor(mWatchHandColor);
                 mMinutePaint.setColor(mWatchHandColor);
                 mBigSecondPaint.setColor(mWatchHandHighlightColor);
                 mTickAndCirclePaint.setColor(mWatchHandColor);
-
-                mHourPaint.setAntiAlias(true);
-                mMinutePaint.setAntiAlias(true);
-                mBigSecondPaint.setAntiAlias(true);
-                mTickAndCirclePaint.setAntiAlias(true);
-
-                if (SHADOW_RADIUS > 0) {
-                    mHourPaint.setShadowLayer(SHADOW_RADIUS, 0, 0, mWatchHandShadowColor);
-                    mMinutePaint.setShadowLayer(SHADOW_RADIUS, 0, 0, mWatchHandShadowColor);
-                    mBigSecondPaint.setShadowLayer(SHADOW_RADIUS, 0, 0, mWatchHandShadowColor);
-                    mTickAndCirclePaint.setShadowLayer(SHADOW_RADIUS, 0, 0, mWatchHandShadowColor);
+                mBigTickPaint.setColor(mWatchHandColor);
+                for (Paint p : paints)
+                {
+                    p.setAntiAlias(true);
+                    if (SHADOW_RADIUS > 0) {
+                        p.setShadowLayer(SHADOW_RADIUS, 0, 0, mWatchHandShadowColor);
+                    }
                 }
             }
         }
@@ -395,7 +390,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
                 float inner = isMajor ? innerBigTickRadius : innerTickRadius;
                 Vector2 innerPos = RotateCoordinate(tickRotationDegrees, inner);
                 Vector2 outerPos = RotateCoordinate(tickRotationDegrees, outerTickRadius);
-                Paint paint = isMajor ? mBigSecondPaint : mTickAndCirclePaint;
+                Paint paint = isMajor ? mBigTickPaint : mTickAndCirclePaint;
                 canvas.drawLine(mCenterX + innerPos.x, mCenterY + innerPos.y,
                                 mCenterX + outerPos.x, mCenterY + outerPos.y, paint);
             }
@@ -456,7 +451,8 @@ public class MyWatchFace extends CanvasWatchFaceService {
              * Ensure the "seconds" hand is drawn only when we are in interactive mode.
              * Otherwise, we only update the watch face once a minute.
              */
-            if (!mAmbient) {
+            if (!mAmbient)
+            {
                 canvas.rotate(secondsRotation - minutesRotation, mCenterX, mCenterY);
                 canvas.drawLine(
                         mCenterX,
