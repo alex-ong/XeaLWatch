@@ -91,7 +91,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
         private static final float CENTER_GAP_AND_CIRCLE_RADIUS = 4f;
 
         private static final int SHADOW_RADIUS = 0;
-
+        private static final int NUM_SECONDS = 60;
 
         /* Handler to update the time once a second in interactive mode. */
         private final Handler mUpdateTimeHandler = new EngineHandler(this);
@@ -378,29 +378,44 @@ public class MyWatchFace extends CanvasWatchFaceService {
             }
         }
 
-        private void drawWatchFace(Canvas canvas) {
-
-            /*
-             * Draw ticks. Usually you will want to bake this directly into the photo, but in
-             * cases where you want to allow users to select their own photos, this dynamically
-             * creates them on top of the photo.
-             */
+        /*
+         * Draw ticks. Usually you will want to bake this directly into the photo, but in
+         * cases where you want to allow users to select their own photos, this dynamically
+         * creates them on top of the photo.
+         */
+        private void drawTicks(Canvas canvas)
+        {
             float innerTickRadius = mCenterX - 5;
             float innerBigTickRadius = mCenterX - 10;
             float outerTickRadius = mCenterX;
-            int NUM_SECONDS = 60;
+
             for (int tickIndex = 0; tickIndex < 60; tickIndex++) {
                 boolean isMajor = tickIndex % 5 == 0;
-                float tickRot = (float) (tickIndex * Math.PI * 2 / NUM_SECONDS);
+                float tickRotationDegrees = (float) (tickIndex * Math.PI * 2 / NUM_SECONDS);
                 float inner = isMajor ? innerBigTickRadius : innerTickRadius;
-                float innerX = (float) Math.sin(tickRot) * inner;
-                float innerY = (float) -Math.cos(tickRot) * inner;
-                float outerX = (float) Math.sin(tickRot) * outerTickRadius;
-                float outerY = (float) -Math.cos(tickRot) * outerTickRadius;
-                Paint paint = isMajor ? mTickAndCirclePaint : mTickAndCirclePaint;
-                canvas.drawLine(mCenterX + innerX, mCenterY + innerY,
-                        mCenterX + outerX, mCenterY + outerY, paint);
+                Vector2 innerPos = RotateCoordinate(tickRotationDegrees, inner);
+                Vector2 outerPos = RotateCoordinate(tickRotationDegrees, outerTickRadius);
+                Paint paint = isMajor ? mBigSecondPaint : mTickAndCirclePaint;
+                canvas.drawLine(mCenterX + innerPos.x, mCenterY + innerPos.y,
+                                mCenterX + outerPos.x, mCenterY + outerPos.y, paint);
             }
+        }
+
+        /**
+         * Returns a coordinate rotated around the circle.
+         * @param rotationDegrees
+         * @param distance
+         * @return
+         */
+        private Vector2 RotateCoordinate(float rotationDegrees, float distance)
+        {
+            return new Vector2((float) Math.sin(rotationDegrees) * distance,
+                               (float) Math.cos(rotationDegrees) * distance);
+        }
+        private void drawWatchFace(Canvas canvas) {
+
+
+            drawTicks(canvas);
 
             /*
              * These calculations reflect the rotation in degrees per unit of time, e.g.,
