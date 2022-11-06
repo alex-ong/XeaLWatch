@@ -80,15 +80,6 @@ public class MyWatchFace extends CanvasWatchFaceService {
     private class Engine extends CanvasWatchFaceService.Engine {
 
 
-        private static final float HOUR_HAND_LENGTH = 0.7f;
-        private static final float MINUTE_HAND_LENGTH = 0.8f;
-        private static final float SECOND_HAND_LENGTH = 0.9f;
-        private static final float SECOND_HAND_LENGTH2 = 0.2f;
-
-        private static final float CENTER_GAP_AND_CIRCLE_RADIUS = 8f;
-
-        private static final int NUM_SECONDS = 60;
-
         /* Handler to update the time once a second in interactive mode. */
         private final Handler mUpdateTimeHandler = new EngineHandler(this);
         private Calendar mCalendar;
@@ -112,12 +103,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
 
         private boolean mRegisteredTimeZoneReceiver = false;
         private boolean mMuteMode;
-        private float mCenterX;
-        private float mCenterY;
-        private float mSecondHandLength; //regular length
-        private float mSecondHandLength2; //reverse, "overshoot" length
-        private float mMinuteHandLength;
-        private float mHourHandLength;
+
         /* Colors for all hands (hour, minute, seconds, ticks) based on photo loaded. */
         private int mWatchHandColor = Color.WHITE;
         private int mWatchHandSecondColor = Color.RED;
@@ -125,6 +111,8 @@ public class MyWatchFace extends CanvasWatchFaceService {
 
         private PaintBucket mPaintBucket;
         private BinaryPaint mBackgroundPaint;
+        private final WatchPainter mWatchPainter = new WatchPainter();
+
         private Bitmap mBackgroundBitmap;
         private Bitmap mGrayBackgroundBitmap;
         private boolean mAmbient;
@@ -217,22 +205,8 @@ public class MyWatchFace extends CanvasWatchFaceService {
         @Override
         public void onSurfaceChanged(SurfaceHolder holder, int format, int width, int height) {
             super.onSurfaceChanged(holder, format, width, height);
+            this.mWatchPainter.updateSurface(width, height);
 
-            /*
-             * Find the coordinates of the center point on the screen, and ignore the window
-             * insets, so that, on round watches with a "chin", the watch face is centered on the
-             * entire screen, not just the usable portion.
-             */
-            mCenterX = width / 2f;
-            mCenterY = height / 2f;
-
-            /*
-             * Calculate lengths of different hands based on watch screen size.
-             */
-            mSecondHandLength = mCenterX * SECOND_HAND_LENGTH;
-            mSecondHandLength2 = mCenterX * SECOND_HAND_LENGTH2;
-            mMinuteHandLength = mCenterX * MINUTE_HAND_LENGTH;
-            mHourHandLength = mCenterX * HOUR_HAND_LENGTH;
 
             /* Scale loaded background image (more efficient) if surface dimensions change. */
             float scale = ((float) width) / (float) mBackgroundBitmap.getWidth();
@@ -298,7 +272,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
             long now = System.currentTimeMillis();
             mCalendar.setTimeInMillis(now);
             drawBackground(canvas);
-            drawWatchFace(canvas);
+            mWatchPainter.drawWatchFace(canvas, mPaintBucket, mCalendar, mAmbient, mChargingStatus);
         }
 
         private void drawBackground(Canvas canvas) {
@@ -312,95 +286,6 @@ public class MyWatchFace extends CanvasWatchFaceService {
             }
         }
 
-        /*
-         * Draw ticks. Usually you will want to bake this directly into the photo, but in
-         * cases where you want to allow users to select their own photos, this dynamically
-         * creates them on top of the photo.
-         *
-         * This will also color the ticks in green based on charging status.
-         */
-        private void drawTicks(Canvas canvas) {
-            float innerTickRadius = mCenterX - 20;
-            float innerBigTickRadius = mCenterX - 25;
-            float outerTickRadius = mCenterX;
-
-            // Set ticks to green if we're charging.
-            int stopChargingIndex = Math.round(mChargingStatus.percent / 100f * NUM_SECONDS);
-            if (!mChargingStatus.isCharging) stopChargingIndex = 0;
-            BinaryPaint mBigTickPaint = mPaintBucket.getBigTickPaint();
-            BinaryPaint mSmallTickPaint = mPaintBucket.getSmallTickPaint();
-            mBigTickPaint.setActive();
-            mSmallTickPaint.setActive();
-
-            for (int tickIndex = 0; tickIndex < NUM_SECONDS; tickIndex++) {
-                if (tickIndex == stopChargingIndex) {
-                    mBigTickPaint.setInactive();
-                    mSmallTickPaint.setInactive();
-                }
-                boolean isMajor = tickIndex % 5 == 0;
-                float tickRotationDegrees = (float) (tickIndex * (360 / NUM_SECONDS));
-                float inner = isMajor ? innerBigTickRadius : innerTickRadius;
-                Vector2 innerPos = RotateCoordinate(tickRotationDegrees, inner);
-                Vector2 outerPos = RotateCoordinate(tickRotationDegrees, outerTickRadius);
-                BinaryPaint paint = isMajor ? mBigTickPaint : mSmallTickPaint;
-                canvas.drawLine(mCenterX + innerPos.x, mCenterY + innerPos.y,
-                        mCenterX + outerPos.x, mCenterY + outerPos.y, paint);
-            }
-        }
-
-        /**
-         * Returns a coordinate rotated around the circle.
-         *
-         * @param rotationDegrees how many degrees to rotate
-         * @param distance        distance from centre
-         * @return a vector2 representing a point rotated around 0,0
-         */
-        private Vector2 RotateCoordinate(float rotationDegrees, float distance) {
-            rotationDegrees -= 90;
-            rotationDegrees = (float) Math.toRadians(rotationDegrees);
-            return new Vector2((float) Math.cos(rotationDegrees) * distance,
-                    (float) Math.sin(rotationDegrees) * distance);
-        }
-
-
-        private void drawWatchFace(Canvas canvas) {
-            drawTicks(canvas);
-
-            /*
-             * These calculations reflect the rotation in degrees per unit of time, e.g.,
-             * 360 / 60 = 6 and 360 / 12 = 30.
-             */
-            final float secondsRotation = TimeDegrees.GetDegreesValue(Calendar.SECOND, mCalendar);
-            final float minutesRotation = TimeDegrees.GetDegreesValue(Calendar.MINUTE, mCalendar);
-            final float hoursRotation = TimeDegrees.GetDegreesValue(Calendar.HOUR, mCalendar);
-
-            Vector2 hourStart = RotateCoordinate(hoursRotation, CENTER_GAP_AND_CIRCLE_RADIUS);
-            Vector2 hourEnd = RotateCoordinate(hoursRotation, mHourHandLength);
-
-            Vector2 minuteStart = RotateCoordinate(minutesRotation, CENTER_GAP_AND_CIRCLE_RADIUS);
-            Vector2 minuteEnd = RotateCoordinate(minutesRotation, mMinuteHandLength);
-
-            Vector2 secondStart = RotateCoordinate(180 + secondsRotation, mSecondHandLength2);
-            Vector2 secondEnd = RotateCoordinate(secondsRotation, mSecondHandLength);
-
-            //Add offset to all positions.
-            for (Vector2 vec : new Vector2[]{hourStart, hourEnd, minuteStart, minuteEnd, secondStart, secondEnd}) {
-                vec.addOffset(mCenterX, mCenterY);
-            }
-
-            mPaintBucket.DrawHour(canvas, hourStart, hourEnd);
-            mPaintBucket.DrawMinute(canvas, minuteStart, minuteEnd);
-            if (!mAmbient)
-                mPaintBucket.DrawSecond(canvas, secondStart, secondEnd);
-
-            // center circle
-            canvas.drawCircle(
-                    mCenterX,
-                    mCenterY,
-                    CENTER_GAP_AND_CIRCLE_RADIUS,
-                    mPaintBucket.getSecondPaint());
-
-        }
 
         @Override
         public void onVisibilityChanged(boolean visible) {
