@@ -207,7 +207,6 @@ public class MyWatchFace extends CanvasWatchFaceService {
             super.onSurfaceChanged(holder, format, width, height);
             this.mWatchPainter.updateSurface(width, height);
 
-
             /* Scale loaded background image (more efficient) if surface dimensions change. */
             float scale = ((float) width) / (float) mBackgroundBitmap.getWidth();
 
@@ -228,6 +227,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
             if (!mBurnInProtection && !mLowBitAmbient) {
                 initGrayBackgroundBitmap();
             }
+            this.mWatchPainter.cacheBackgrounds(mBackgroundBitmap, mGrayBackgroundBitmap, mPaintBucket);
         }
 
         private void initGrayBackgroundBitmap() {
@@ -272,21 +272,25 @@ public class MyWatchFace extends CanvasWatchFaceService {
             long now = System.currentTimeMillis();
             mCalendar.setTimeInMillis(now);
             drawBackground(canvas);
-            mWatchPainter.drawWatchFace(canvas, mPaintBucket, mCalendar, mAmbient, mChargingStatus);
+            drawWatchFace(canvas);
         }
 
         private void drawBackground(Canvas canvas) {
-
+            WatchState ws;
             if (mAmbient && (mLowBitAmbient || mBurnInProtection)) {
-                canvas.drawColor(Color.BLACK);
+                ws = WatchState.BLACK;
             } else if (mAmbient) {
-                canvas.drawBitmap(mGrayBackgroundBitmap, 0, 0, mBackgroundPaint);
+                ws = WatchState.GRAY;
             } else {
-                canvas.drawBitmap(mBackgroundBitmap, 0, 0, mBackgroundPaint);
+                ws = WatchState.FULL;
             }
+            mWatchPainter.drawBackground(canvas, ws, mPaintBucket, mChargingStatus);
         }
 
-
+        private void drawWatchFace(Canvas canvas) {
+            mWatchPainter.drawWatchFace(canvas, mPaintBucket, mCalendar, mAmbient);
+        }
+        
         @Override
         public void onVisibilityChanged(boolean visible) {
             super.onVisibilityChanged(visible);

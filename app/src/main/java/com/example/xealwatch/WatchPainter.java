@@ -1,8 +1,12 @@
 package com.example.xealwatch;
 
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 
 import java.util.Calendar;
+
 
 public class WatchPainter {
 
@@ -22,9 +26,49 @@ public class WatchPainter {
     private float mMinuteHandLength;
     private float mHourHandLength;
 
+    private Bitmap mRawBackground = null;
+    private Bitmap mRawGreyBackground = null;
+    private Bitmap mCachedBackground = null;
+    private Bitmap mCachedGreyBackground = null;
+    private Bitmap mCachedBlackBackground = null;
+    private final Paint mBlackPaint = new Paint();
+
+    public WatchPainter() {
+        mBlackPaint.setColor(Color.BLACK);
+    }
+
+    /**
+     * Create a few bitmaps with the background and ticks draw on
+     *
+     * @param backgroundBitmap
+     * @param greyBackgroundBitmap
+     */
+    public void cacheBackgrounds(Bitmap backgroundBitmap, Bitmap greyBackgroundBitmap, PaintBucket paint) {
+        //Generate cached backgrounds
+        mRawBackground = backgroundBitmap;
+        mRawGreyBackground = greyBackgroundBitmap;
+        mCachedBackground = generateCachedBackground(backgroundBitmap, paint);
+        mCachedGreyBackground = generateCachedBackground(greyBackgroundBitmap, paint);
+        mCachedBlackBackground = generateCachedBackground(null, paint);
+    }
+
+    private Bitmap generateCachedBackground(Bitmap backgroundImage, PaintBucket paint) {
+        int width = (int) center.x * 2;
+        int height = (int) center.y * 2;
+
+        Bitmap result = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas writingCanvas = new Canvas(result);
+        if (backgroundImage == null)
+            writingCanvas.drawColor(Color.BLACK);
+        else
+            writingCanvas.drawBitmap(backgroundImage, 0, 0, mBlackPaint);
+        drawTicks(writingCanvas, new ChargingStatus(), paint);
+        return result;
+    }
 
     /*
-     * Draw ticks. Usually you will want to bake this directly into the photo, but in
+     * Draw ticks onto a given canvas.
+     * Usually you will want to bake this directly into the photo, but in
      * cases where you want to allow users to select their own photos, this dynamically
      * creates them on top of the photo.
      *
@@ -73,17 +117,52 @@ public class WatchPainter {
                 (float) Math.sin(rotationDegrees) * distance);
     }
 
+    /**
+     * Draws the background, including ticks.
+     *
+     * @param canvas
+     * @param ws
+     * @param chargeStatus
+     * @param paintBucket
+     */
+    public void drawBackground(Canvas canvas, WatchState ws, PaintBucket paintBucket, ChargingStatus chargeStatus) {
+        // Draw the raw background, then draw the ticks manually
+        if (chargeStatus.isCharging) {
+            if (ws == WatchState.BLACK) {
+                canvas.drawColor(Color.BLACK);
+            } else if (ws == WatchState.GRAY) {
+                canvas.drawBitmap(mRawGreyBackground, 0, 0, mBlackPaint);
+            } else {
+                canvas.drawBitmap(mRawBackground, 0, 0, mBlackPaint);
+            }
+            drawTicks(canvas, chargeStatus, paintBucket);
+        } else { // draw the background including ticks from cache.
+            if (ws == WatchState.BLACK) {
+                canvas.drawColor(Color.BLACK);
+            } else if (ws == WatchState.GRAY) {
+                canvas.drawBitmap(mCachedGreyBackground, 0, 0, mBlackPaint);
+            } else {
+                canvas.drawBitmap(mCachedBackground, 0, 0, mBlackPaint);
+            }
+        }
+    }
 
-    public void drawWatchFace(Canvas canvas, PaintBucket mPaintBucket, Calendar mCalendar, boolean mAmbient, ChargingStatus mChargingStatus) {
-        drawTicks(canvas,mChargingStatus,mPaintBucket);
-
+    /**
+     * Draws the hands and date
+     *
+     * @param canvas
+     * @param mPaintBucket
+     * @param calendar
+     * @param isAmbient
+     */
+    public void drawWatchFace(Canvas canvas, PaintBucket mPaintBucket, Calendar calendar, boolean isAmbient) {
         /*
          * These calculations reflect the rotation in degrees per unit of time, e.g.,
          * 360 / 60 = 6 and 360 / 12 = 30.
          */
-        final float secondsRotation = TimeDegrees.GetDegreesValue(Calendar.SECOND, mCalendar);
-        final float minutesRotation = TimeDegrees.GetDegreesValue(Calendar.MINUTE, mCalendar);
-        final float hoursRotation = TimeDegrees.GetDegreesValue(Calendar.HOUR, mCalendar);
+        final float secondsRotation = TimeDegrees.GetDegreesValue(Calendar.SECOND, calendar);
+        final float minutesRotation = TimeDegrees.GetDegreesValue(Calendar.MINUTE, calendar);
+        final float hoursRotation = TimeDegrees.GetDegreesValue(Calendar.HOUR, calendar);
 
         Vector2 hourStart = RotateCoordinate(hoursRotation, CENTER_GAP_AND_CIRCLE_RADIUS);
         Vector2 hourEnd = RotateCoordinate(hoursRotation, mHourHandLength);
@@ -101,7 +180,7 @@ public class WatchPainter {
 
         mPaintBucket.DrawHour(canvas, hourStart, hourEnd);
         mPaintBucket.DrawMinute(canvas, minuteStart, minuteEnd);
-        if (!mAmbient)
+        if (!isAmbient)
             mPaintBucket.DrawSecond(canvas, secondStart, secondEnd);
 
         // center circle
@@ -115,6 +194,7 @@ public class WatchPainter {
 
     /**
      * Call this when the screen resolution changes.
+     *
      * @param width
      * @param height
      */
@@ -135,4 +215,6 @@ public class WatchPainter {
         mMinuteHandLength = center.x * MINUTE_HAND_LENGTH;
         mHourHandLength = center.x * HOUR_HAND_LENGTH;
     }
+
+
 }
