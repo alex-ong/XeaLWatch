@@ -199,9 +199,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
             /* Dim display in mute mode. */
             if (mMuteMode != inMuteMode) {
                 mMuteMode = inMuteMode;
-                mPaintBucket.getHourPaint().setAlpha(inMuteMode ? 100 : 255);
-                mPaintBucket.getMinutePaint().setAlpha(inMuteMode ? 100 : 255);
-                mPaintBucket.getSecondPaint().setAlpha(inMuteMode ? 80 : 255);
+                mPaintBucket.setMuteMode(mMuteMode);
                 invalidate();
             }
         }

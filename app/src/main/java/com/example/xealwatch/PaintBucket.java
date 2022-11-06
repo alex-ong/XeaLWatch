@@ -105,4 +105,14 @@ public class PaintBucket {
             paint.setActive(!isAmbient);
         }
     }
+
+    /**
+     * Reduces alpha of the hands when we are in mute mode
+     * @param inMuteMode whether to mute the colors
+     */
+    public void setMuteMode(boolean inMuteMode) {
+        mHourPaint.setAlpha(inMuteMode ? 100 : 255);
+        mMinutePaint.setAlpha(inMuteMode ? 100 : 255);
+        mSecondPaint.setAlpha(inMuteMode ? 80 : 255);
+    }
 }
