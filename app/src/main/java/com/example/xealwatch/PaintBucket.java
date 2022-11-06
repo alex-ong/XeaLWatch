@@ -1,2 +1,4 @@
-package com.example.xealwatch;public class PaintBucket {
+package com.example.xealwatch;
+
+public class PaintBucket {
 }

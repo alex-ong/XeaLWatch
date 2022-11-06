@@ -34,7 +34,6 @@ public class BinaryPaint extends Paint {
     public void setActive()
     {
         setColor(activeColor);
-        setAntiAlias(true);
         setStyle(activeStyle);
     }
 
@@ -44,7 +43,6 @@ public class BinaryPaint extends Paint {
     public void setInactive()
     {
         setColor(Color.WHITE);
-        setAntiAlias(false);
         setStyle(inactiveStyle);
     }
 

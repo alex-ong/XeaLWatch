@@ -124,6 +124,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
         /* Colors for all hands (hour, minute, seconds, ticks) based on photo loaded. */
         private int mWatchHandColor = Color.WHITE;
         private int mWatchHandSecondColor = Color.RED;
+        private int mWatchTickColor = Color.GREEN; // green while charging.
 
         private BinaryPaint mHourPaint;
         private BinaryPaint mMinutePaint;
@@ -186,10 +187,10 @@ public class MyWatchFace extends CanvasWatchFaceService {
             mSecondPaint.initializeActive(mWatchHandSecondColor,SECOND_STROKE_WIDTH,Paint.Cap.ROUND,Paint.Style.FILL);
 
             mSmallTickPaint = new BinaryPaint();
-            mSmallTickPaint.initializeActive(mWatchHandColor,SMALL_SECOND_TICK_STROKE_WIDTH,Paint.Cap.BUTT,Paint.Style.STROKE);
+            mSmallTickPaint.initializeActive(mWatchTickColor,SMALL_SECOND_TICK_STROKE_WIDTH,Paint.Cap.BUTT,Paint.Style.STROKE);
 
             mBigTickPaint = new BinaryPaint();
-            mBigTickPaint.initializeActive(mWatchHandColor,SECOND_STROKE_WIDTH,Paint.Cap.BUTT,Paint.Style.STROKE);
+            mBigTickPaint.initializeActive(mWatchTickColor,SECOND_STROKE_WIDTH,Paint.Cap.BUTT,Paint.Style.STROKE);
         }
 
         @Override
@@ -348,20 +349,33 @@ public class MyWatchFace extends CanvasWatchFaceService {
          * Draw ticks. Usually you will want to bake this directly into the photo, but in
          * cases where you want to allow users to select their own photos, this dynamically
          * creates them on top of the photo.
+         *
+         * This will also color the ticks in green based on charging status.
          */
         private void drawTicks(Canvas canvas)
         {
-            float innerTickRadius = mCenterX - 10;
-            float innerBigTickRadius = mCenterX - 15;
+            float innerTickRadius = mCenterX - 15;
+            float innerBigTickRadius = mCenterX - 20;
             float outerTickRadius = mCenterX;
 
+            // Set ticks to green if we're charging.
+            int stopChargingIndex = Math.round(mChargingStatus.percent/100f * NUM_SECONDS);
+            if (!mChargingStatus.isCharging) stopChargingIndex = 0;
+            mBigTickPaint.setActive();
+            mSmallTickPaint.setActive();
+
             for (int tickIndex = 0; tickIndex < NUM_SECONDS; tickIndex++) {
+                if (tickIndex == stopChargingIndex)
+                {
+                    mBigTickPaint.setInactive();
+                    mSmallTickPaint.setInactive();
+                }
                 boolean isMajor = tickIndex % 5 == 0;
                 float tickRotationDegrees = (float) (tickIndex * (360 / NUM_SECONDS));
                 float inner = isMajor ? innerBigTickRadius : innerTickRadius;
                 Vector2 innerPos = RotateCoordinate(tickRotationDegrees, inner);
                 Vector2 outerPos = RotateCoordinate(tickRotationDegrees, outerTickRadius);
-                Paint paint = isMajor ? mBigTickPaint : mSmallTickPaint;
+                BinaryPaint paint = isMajor ? mBigTickPaint : mSmallTickPaint;
                 canvas.drawLine(mCenterX + innerPos.x, mCenterY + innerPos.y,
                                 mCenterX + outerPos.x, mCenterY + outerPos.y, paint);
             }
