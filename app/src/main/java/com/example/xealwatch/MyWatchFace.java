@@ -103,7 +103,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
             }
         };
 
-        private ChargingStatus mChargingStatus = new ChargingStatus();
+        private final ChargingStatus mChargingStatus = new ChargingStatus();
         private final BroadcastReceiver mChargingReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -151,7 +151,6 @@ public class MyWatchFace extends CanvasWatchFaceService {
 
             initializeBackground();
             initializeWatchFace();
-            System.out.println("onCreate");
         }
 
         private void initializeBackground() {
@@ -383,9 +382,9 @@ public class MyWatchFace extends CanvasWatchFaceService {
 
         /**
          * Returns a coordinate rotated around the circle.
-         * @param rotationDegrees
-         * @param distance
-         * @return
+         * @param rotationDegrees how many degrees to rotate
+         * @param distance distance from centre
+         * @return a vector2 representing a point rotated around 0,0
          */
         private Vector2 RotateCoordinate(float rotationDegrees, float distance)
         {

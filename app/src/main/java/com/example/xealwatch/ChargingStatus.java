@@ -25,12 +25,11 @@ public class ChargingStatus {
         int status = batteryStatusIntent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
         isCharging = (status == BatteryManager.BATTERY_STATUS_CHARGING ||
                      status == BatteryManager.BATTERY_STATUS_FULL);
-        System.out.println(isCharging ? "Charging" : "Not Charging!");
+
         //Battery percent
         int level = batteryStatusIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale = batteryStatusIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
 
         percent = level * 100 / (float)scale;
-        System.out.println(percent);
     }
 }
