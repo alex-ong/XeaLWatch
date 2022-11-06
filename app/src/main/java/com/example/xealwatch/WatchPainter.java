@@ -138,7 +138,7 @@ public class WatchPainter {
             drawTicks(canvas, chargeStatus, paintBucket);
         } else { // draw the background including ticks from cache.
             if (ws == WatchState.BLACK) {
-                canvas.drawColor(Color.BLACK);
+                canvas.drawBitmap(mCachedBlackBackground, 0, 0, mBlackPaint);
             } else if (ws == WatchState.GRAY) {
                 canvas.drawBitmap(mCachedGreyBackground, 0, 0, mBlackPaint);
             } else {
