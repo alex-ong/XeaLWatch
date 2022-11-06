@@ -10,6 +10,8 @@ public class BinaryPaint extends Paint {
 
     private int activeColor;
     private Style activeStyle;
+
+    private int inactiveColor = Color.WHITE;
     private Style inactiveStyle = Style.STROKE;
 
     public void initializeActive(int color, float strokeWidth, Paint.Cap strokeCap, Style style) {
@@ -22,7 +24,8 @@ public class BinaryPaint extends Paint {
         setStyle(activeStyle);
     }
 
-    public void initializeInactive(Style style) {
+    public void initializeInactive(int color, Style style) {
+        inactiveColor = color;
         inactiveStyle = style;
     }
 
@@ -38,7 +41,7 @@ public class BinaryPaint extends Paint {
      * Sets paint to inactive settings
      */
     public void setInactive() {
-        setColor(Color.WHITE);
+        setColor(inactiveColor);
         setStyle(inactiveStyle);
     }
 

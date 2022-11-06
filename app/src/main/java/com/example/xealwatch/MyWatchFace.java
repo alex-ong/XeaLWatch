@@ -118,6 +118,8 @@ public class MyWatchFace extends CanvasWatchFaceService {
         private boolean mAmbient;
         private boolean mLowBitAmbient;
         private boolean mBurnInProtection;
+        private WatchState mCurrentWatchState = WatchState.BLACK;
+
 
         @Override
         public void onCreate(SurfaceHolder holder) {
@@ -168,6 +170,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
             super.onPropertiesChanged(properties);
             mLowBitAmbient = properties.getBoolean(PROPERTY_LOW_BIT_AMBIENT, false);
             mBurnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false);
+            refreshWatchState();
         }
 
         @Override
@@ -180,6 +183,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
         public void onAmbientModeChanged(boolean inAmbientMode) {
             super.onAmbientModeChanged(inAmbientMode);
             mAmbient = inAmbientMode;
+            refreshWatchState();
             mPaintBucket.updateWatchHandStyles(mAmbient);
 
             /* Check and trigger whether or not timer should be running (only in active mode). */
@@ -275,22 +279,25 @@ public class MyWatchFace extends CanvasWatchFaceService {
             drawWatchFace(canvas);
         }
 
-        private void drawBackground(Canvas canvas) {
-            WatchState ws;
+
+        private void refreshWatchState() {
             if (mAmbient && (mLowBitAmbient || mBurnInProtection)) {
-                ws = WatchState.BLACK;
+                mCurrentWatchState = WatchState.BLACK;
             } else if (mAmbient) {
-                ws = WatchState.GRAY;
+                mCurrentWatchState = WatchState.GRAY;
             } else {
-                ws = WatchState.FULL;
+                mCurrentWatchState = WatchState.FULL;
             }
-            mWatchPainter.drawBackground(canvas, ws, mPaintBucket, mChargingStatus);
+        }
+
+        private void drawBackground(Canvas canvas) {
+            mWatchPainter.drawBackground(canvas, mCurrentWatchState, mPaintBucket, mChargingStatus);
         }
 
         private void drawWatchFace(Canvas canvas) {
-            mWatchPainter.drawWatchFace(canvas, mPaintBucket, mCalendar, mAmbient);
+            mWatchPainter.drawWatchFace(canvas, mPaintBucket, mCalendar, mCurrentWatchState);
         }
-        
+
         @Override
         public void onVisibilityChanged(boolean visible) {
             super.onVisibilityChanged(visible);

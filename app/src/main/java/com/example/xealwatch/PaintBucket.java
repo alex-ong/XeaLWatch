@@ -1,14 +1,21 @@
 package com.example.xealwatch;
 
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 
 public class PaintBucket {
-    private BinaryPaint mHourPaint;
-    private BinaryPaint mMinutePaint;
-    private BinaryPaint mSecondPaint;
-    private BinaryPaint mSmallTickPaint;
-    private BinaryPaint mBigTickPaint;
+    private final BinaryPaint mHourPaint;
+    private final BinaryPaint mMinutePaint;
+    private final BinaryPaint mSecondPaint;
+
+    private final BinaryPaint mHourInsetPaint;
+    private final BinaryPaint mMinuteInsetPaint;
+
+    private final BinaryPaint mSmallTickPaint;
+    private final BinaryPaint mBigTickPaint;
+    private final BinaryPaint mBigTickInsetPaint;
+
     private static final float HOUR_STROKE_WIDTH = 15f;
     private static final float MINUTE_STROKE_WIDTH = 10f;
     private static final float SECOND_STROKE_WIDTH = 5f;
@@ -22,6 +29,12 @@ public class PaintBucket {
         mMinutePaint = new BinaryPaint();
         mMinutePaint.initializeActive(watchHandColor, MINUTE_STROKE_WIDTH, Paint.Cap.ROUND, Paint.Style.FILL);
 
+        mHourInsetPaint = new BinaryPaint();
+        mHourInsetPaint.initializeActive(Color.BLACK, (HOUR_STROKE_WIDTH - 2), Paint.Cap.ROUND, Paint.Style.FILL);
+
+        mMinuteInsetPaint = new BinaryPaint();
+        mMinuteInsetPaint.initializeActive(Color.BLACK, (MINUTE_STROKE_WIDTH - 2), Paint.Cap.ROUND, Paint.Style.FILL);
+
         mSecondPaint = new BinaryPaint();
         mSecondPaint.initializeActive(watchHandSecondColor, SECOND_STROKE_WIDTH, Paint.Cap.ROUND, Paint.Style.FILL);
 
@@ -30,6 +43,11 @@ public class PaintBucket {
 
         mBigTickPaint = new BinaryPaint();
         mBigTickPaint.initializeActive(watchTickColor, LARGE_SECOND_TICK_STROKE_WIDTH, Paint.Cap.BUTT, Paint.Style.STROKE);
+        mBigTickPaint.initializeInactive(Color.WHITE, Paint.Style.STROKE);
+
+        mBigTickInsetPaint = new BinaryPaint();
+        mBigTickInsetPaint.initializeActive(watchTickColor, (LARGE_SECOND_TICK_STROKE_WIDTH - 2), Paint.Cap.BUTT, Paint.Style.STROKE);
+        mBigTickInsetPaint.initializeInactive(Color.BLACK, Paint.Style.STROKE);
     }
 
     public BinaryPaint getHourPaint() {
@@ -52,6 +70,10 @@ public class PaintBucket {
         return mBigTickPaint;
     }
 
+    public BinaryPaint getBigTickInsetPaint() {
+        return mBigTickInsetPaint;
+    }
+
 
     public void DrawHour(Canvas canvas, Vector2 start, Vector2 end) {
         canvas.drawLine(start.x, start.y, end.x, end.y, mHourPaint);
@@ -63,6 +85,14 @@ public class PaintBucket {
 
     public void DrawSecond(Canvas canvas, Vector2 start, Vector2 end) {
         canvas.drawLine(start.x, start.y, end.x, end.y, mSecondPaint);
+    }
+
+    public void DrawHourInset(Canvas canvas, Vector2 start, Vector2 end) {
+        canvas.drawLine(start.x, start.y, end.x, end.y, mHourInsetPaint);
+    }
+
+    public void DrawMinuteInset(Canvas canvas, Vector2 start, Vector2 end) {
+        canvas.drawLine(start.x, start.y, end.x, end.y, mMinuteInsetPaint);
     }
 
     /**

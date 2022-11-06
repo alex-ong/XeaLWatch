@@ -40,19 +40,19 @@ public class WatchPainter {
     /**
      * Create a few bitmaps with the background and ticks draw on
      *
-     * @param backgroundBitmap
-     * @param greyBackgroundBitmap
+     * @param backgroundBitmap     background image in full colour
+     * @param greyBackgroundBitmap background image in greyscale
      */
     public void cacheBackgrounds(Bitmap backgroundBitmap, Bitmap greyBackgroundBitmap, PaintBucket paint) {
         //Generate cached backgrounds
         mRawBackground = backgroundBitmap;
         mRawGreyBackground = greyBackgroundBitmap;
-        mCachedBackground = generateCachedBackground(backgroundBitmap, paint);
-        mCachedGreyBackground = generateCachedBackground(greyBackgroundBitmap, paint);
-        mCachedBlackBackground = generateCachedBackground(null, paint);
+        mCachedBackground = generateCachedBackground(backgroundBitmap, paint, WatchState.FULL);
+        mCachedGreyBackground = generateCachedBackground(greyBackgroundBitmap, paint, WatchState.GRAY);
+        mCachedBlackBackground = generateCachedBackground(null, paint, WatchState.BLACK);
     }
 
-    private Bitmap generateCachedBackground(Bitmap backgroundImage, PaintBucket paint) {
+    private Bitmap generateCachedBackground(Bitmap backgroundImage, PaintBucket paint, WatchState ws) {
         int width = (int) center.x * 2;
         int height = (int) center.y * 2;
 
@@ -62,8 +62,16 @@ public class WatchPainter {
             writingCanvas.drawColor(Color.BLACK);
         else
             writingCanvas.drawBitmap(backgroundImage, 0, 0, mBlackPaint);
-        drawTicks(writingCanvas, new ChargingStatus(), paint);
+        drawTicks(writingCanvas, new ChargingStatus(), paint, ws);
         return result;
+    }
+
+    /* Draws a single tick */
+    private void drawTick(Canvas canvas, float tickRadius, float endRadius, int tickIndex, BinaryPaint paint) {
+        float tickRotationDegrees = (float) (tickIndex * 360 / NUM_SECONDS);
+        Vector2 innerPos = RotateCoordinate(tickRotationDegrees, tickRadius);
+        Vector2 outerPos = RotateCoordinate(tickRotationDegrees, endRadius);
+        canvas.drawLine(innerPos.x, innerPos.y, outerPos.x, outerPos.y, paint);
     }
 
     /*
@@ -74,32 +82,37 @@ public class WatchPainter {
      *
      * This will also color the ticks in green based on charging status.
      */
-    private void drawTicks(Canvas canvas, ChargingStatus mChargingStatus, PaintBucket mPaintBucket) {
-        float innerTickRadius = center.x - 20;
-        float innerBigTickRadius = center.x - 25;
-        float outerTickRadius = center.x;
+    private void drawTicks(Canvas canvas, ChargingStatus mChargingStatus, PaintBucket paintBucket, WatchState ws) {
+        float smallRadius = center.x - 17;
+        float endSmallRadius = center.x - 10;
+        float bigRadius = center.x - 25;
+        float bigInsetRadius = center.x - 24;
 
         // Set ticks to green if we're charging.
         int stopChargingIndex = Math.round(mChargingStatus.percent / 100f * NUM_SECONDS);
         if (!mChargingStatus.isCharging) stopChargingIndex = 0;
-        BinaryPaint mBigTickPaint = mPaintBucket.getBigTickPaint();
-        BinaryPaint mSmallTickPaint = mPaintBucket.getSmallTickPaint();
-        mBigTickPaint.setActive();
-        mSmallTickPaint.setActive();
-
+        BinaryPaint bigTick = paintBucket.getBigTickPaint();
+        BinaryPaint smallTick = paintBucket.getSmallTickPaint();
+        BinaryPaint bigTickInset = paintBucket.getBigTickInsetPaint();
+        bigTick.setActive();
+        bigTickInset.setActive();
+        smallTick.setActive();
         for (int tickIndex = 0; tickIndex < NUM_SECONDS; tickIndex++) {
             if (tickIndex == stopChargingIndex) {
-                mBigTickPaint.setInactive();
-                mSmallTickPaint.setInactive();
+                bigTick.setInactive();
+                bigTickInset.setInactive();
+                smallTick.setInactive();
             }
             boolean isMajor = tickIndex % 5 == 0;
-            float tickRotationDegrees = (float) (tickIndex * (360 / NUM_SECONDS));
-            float inner = isMajor ? innerBigTickRadius : innerTickRadius;
-            Vector2 innerPos = RotateCoordinate(tickRotationDegrees, inner);
-            Vector2 outerPos = RotateCoordinate(tickRotationDegrees, outerTickRadius);
-            BinaryPaint paint = isMajor ? mBigTickPaint : mSmallTickPaint;
-            canvas.drawLine(center.x + innerPos.x, center.y + innerPos.y,
-                    center.x + outerPos.x, center.x + outerPos.y, paint);
+            if (!isMajor) {
+                drawTick(canvas, smallRadius, endSmallRadius, tickIndex, smallTick);
+            } else {
+                drawTick(canvas, bigRadius, center.x, tickIndex, bigTick);
+                // overdraw a black radius
+                if (ws.ordinal() < WatchState.FULL.ordinal() && !mChargingStatus.isCharging) {
+                    drawTick(canvas, bigInsetRadius, center.x, tickIndex, bigTickInset);
+                }
+            }
         }
     }
 
@@ -108,22 +121,24 @@ public class WatchPainter {
      *
      * @param rotationDegrees how many degrees to rotate
      * @param distance        distance from centre
-     * @return a vector2 representing a point rotated around 0,0
+     * @return a vector2 representing a point rotated around the center of the screen.
      */
     private Vector2 RotateCoordinate(float rotationDegrees, float distance) {
         rotationDegrees -= 90;
         rotationDegrees = (float) Math.toRadians(rotationDegrees);
-        return new Vector2((float) Math.cos(rotationDegrees) * distance,
-                (float) Math.sin(rotationDegrees) * distance);
+        Vector2 result = new Vector2((float) Math.cos(rotationDegrees) * distance,
+                                     (float) Math.sin(rotationDegrees) * distance);
+        result.addOffset(center);
+        return result;
     }
 
     /**
      * Draws the background, including ticks.
      *
-     * @param canvas
-     * @param ws
-     * @param chargeStatus
-     * @param paintBucket
+     * @param canvas       Canvas to draw on
+     * @param ws           the watch's watch-state
+     * @param chargeStatus if the watch is charging
+     * @param paintBucket  a collection of paints to use
      */
     public void drawBackground(Canvas canvas, WatchState ws, PaintBucket paintBucket, ChargingStatus chargeStatus) {
         // Draw the raw background, then draw the ticks manually
@@ -135,7 +150,7 @@ public class WatchPainter {
             } else {
                 canvas.drawBitmap(mRawBackground, 0, 0, mBlackPaint);
             }
-            drawTicks(canvas, chargeStatus, paintBucket);
+            drawTicks(canvas, chargeStatus, paintBucket, ws);
         } else { // draw the background including ticks from cache.
             if (ws == WatchState.BLACK) {
                 canvas.drawBitmap(mCachedBlackBackground, 0, 0, mBlackPaint);
@@ -150,12 +165,12 @@ public class WatchPainter {
     /**
      * Draws the hands and date
      *
-     * @param canvas
-     * @param mPaintBucket
-     * @param calendar
-     * @param isAmbient
+     * @param canvas      Canvas to draw on
+     * @param paintBucket Collection of paints to draw with
+     * @param calendar    Current Date/Time
+     * @param ws          Current watchState
      */
-    public void drawWatchFace(Canvas canvas, PaintBucket mPaintBucket, Calendar calendar, boolean isAmbient) {
+    public void drawWatchFace(Canvas canvas, PaintBucket paintBucket, Calendar calendar, WatchState ws) {
         /*
          * These calculations reflect the rotation in degrees per unit of time, e.g.,
          * 360 / 60 = 6 and 360 / 12 = 30.
@@ -173,30 +188,28 @@ public class WatchPainter {
         Vector2 secondStart = RotateCoordinate(180 + secondsRotation, mSecondHandLength2);
         Vector2 secondEnd = RotateCoordinate(secondsRotation, mSecondHandLength);
 
-        //Add offset to all positions.
-        for (Vector2 vec : new Vector2[]{hourStart, hourEnd, minuteStart, minuteEnd, secondStart, secondEnd}) {
-            vec.addOffset(center);
+        paintBucket.DrawHour(canvas, hourStart, hourEnd);
+        paintBucket.DrawMinute(canvas, minuteStart, minuteEnd);
+        if (ws == WatchState.FULL) {
+            paintBucket.DrawSecond(canvas, secondStart, secondEnd);
+            canvas.drawCircle(center.x, center.y, CENTER_GAP_AND_CIRCLE_RADIUS, paintBucket.getSecondPaint());
+        } else { //draw black over the hour and minute hand
+            Vector2 hourInsetStart = RotateCoordinate(hoursRotation, (CENTER_GAP_AND_CIRCLE_RADIUS + 1));
+            Vector2 hourInsetEnd = RotateCoordinate(hoursRotation, (mHourHandLength - 1));
+            Vector2 minuteInsetStart = RotateCoordinate(minutesRotation, (CENTER_GAP_AND_CIRCLE_RADIUS + 1));
+            Vector2 minuteInsetEnd = RotateCoordinate(minutesRotation, (mMinuteHandLength - 1));
+
+            paintBucket.DrawHourInset(canvas, hourStart, hourEnd);
+            paintBucket.DrawMinuteInset(canvas, minuteStart, minuteEnd);
+            canvas.drawCircle(center.x, center.y, CENTER_GAP_AND_CIRCLE_RADIUS, paintBucket.getSmallTickPaint());
         }
-
-        mPaintBucket.DrawHour(canvas, hourStart, hourEnd);
-        mPaintBucket.DrawMinute(canvas, minuteStart, minuteEnd);
-        if (!isAmbient)
-            mPaintBucket.DrawSecond(canvas, secondStart, secondEnd);
-
-        // center circle
-        canvas.drawCircle(
-                center.x,
-                center.y,
-                CENTER_GAP_AND_CIRCLE_RADIUS,
-                mPaintBucket.getSecondPaint());
-
     }
 
     /**
      * Call this when the screen resolution changes.
      *
-     * @param width
-     * @param height
+     * @param width width of screen
+     * @param height height of screen
      */
     public void updateSurface(int width, int height) {
         /*
@@ -215,6 +228,4 @@ public class WatchPainter {
         mMinuteHandLength = center.x * MINUTE_HAND_LENGTH;
         mHourHandLength = center.x * HOUR_HAND_LENGTH;
     }
-
-
 }
