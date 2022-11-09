@@ -103,7 +103,7 @@ public class WatchPainter {
                 bigTickInset.setInactive();
                 smallTick.setInactive();
             }
-            boolean isMajor = tickIndex % 5 == 0;1
+            boolean isMajor = tickIndex % 5 == 0;
             if (!isMajor) {
                 drawTick(canvas, smallRadius, endSmallRadius, tickIndex, smallTick);
             } else {
