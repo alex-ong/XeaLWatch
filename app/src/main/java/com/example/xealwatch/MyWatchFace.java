@@ -221,10 +221,6 @@ public class MyWatchFace extends CanvasWatchFaceService {
              * ambient mode. That means we don't want devices that support burn-in
              * protection (slight movements in pixels, not great for images going all the way to
              * edges) and low ambient mode (degrades image quality).
-             *
-             * Also, if your watch face will know about all images ahead of time (users aren"t
-             * selecting their own photos for the watch face), it will be more
-             * efficient to create a black/white version (png, etc.) and load that when you need it.
              */
             if (!mBurnInProtection && !mLowBitAmbient) {
                 initGrayBackgroundBitmap();
@@ -262,8 +258,8 @@ public class MyWatchFace extends CanvasWatchFaceService {
                 case TAP_TYPE_TAP:
                     // The user has completed the tap gesture.
                     // TODO: Add code to handle the tap gesture.
-                    Toast.makeText(getApplicationContext(), R.string.message, Toast.LENGTH_SHORT)
-                            .show();
+                    // Toast.makeText(getApplicationContext(), R.string.message, Toast.LENGTH_SHORT)
+                    //        .show();
                     break;
             }
             invalidate();

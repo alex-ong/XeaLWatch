@@ -103,7 +103,7 @@ public class WatchPainter {
                 bigTickInset.setInactive();
                 smallTick.setInactive();
             }
-            boolean isMajor = tickIndex % 5 == 0;
+            boolean isMajor = tickIndex % 5 == 0;1
             if (!isMajor) {
                 drawTick(canvas, smallRadius, endSmallRadius, tickIndex, smallTick);
             } else {
@@ -113,6 +113,12 @@ public class WatchPainter {
                     drawTick(canvas, bigInsetRadius, center.x, tickIndex, bigTickInset);
                 }
             }
+        }
+        // Fix bug where these are left active
+        if (stopChargingIndex >= NUM_SECONDS -1) {
+            bigTick.setInactive();
+            bigTickInset.setInactive();
+            smallTick.setInactive();
         }
     }
 
