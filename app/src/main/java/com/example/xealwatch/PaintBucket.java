@@ -115,4 +115,18 @@ public class PaintBucket {
         mMinutePaint.setAlpha(inMuteMode ? 100 : 255);
         mSecondPaint.setAlpha(inMuteMode ? 80 : 255);
     }
+
+    public void SetTicksInActive()
+    {
+        mBigTickPaint.setInactive();
+        mBigTickInsetPaint.setInactive();
+        mSmallTickPaint.setInactive();
+    }
+
+    public void SetTicksActive()
+    {
+        mBigTickPaint.setActive();
+        mBigTickInsetPaint.setActive();
+        mSmallTickPaint.setActive();
+    }
 }
