@@ -132,26 +132,40 @@ public class WatchPainter {
         }
     }
 
+    /**
+     * Draws the Twelve oclock symbol using two lines.
+     * @param canvas canvas
+     * @param drawBlack whether to overlay in black
+     * @param paintBucket paintBucket to draw with
+     */
     private void drawTwelveOClock(Canvas canvas, boolean drawBlack, PaintBucket paintBucket) {
         Vector2 innerPos = RotateCoordinate(0, tickData.bigTickRadius - 10);
         Vector2 outerPos = RotateCoordinate(0, center.x);
-        DrawThickTick(canvas, paintBucket.getBigTickPaint(), innerPos, outerPos);
+        DrawThickTick(canvas, paintBucket.getBigTickPaint(), innerPos, outerPos, 0);
 
         // overdraw a black radius
         if (drawBlack) {
             innerPos = RotateCoordinate(0, tickData.bigInsetRadius - 10);
             outerPos = RotateCoordinate(0, center.x);
-            DrawThickTick(canvas, paintBucket.getBigTickInsetPaint(), innerPos, outerPos);
+            DrawThickTick(canvas, paintBucket.getBigTickInsetPaint(), innerPos, outerPos, 1);
         }
     }
 
-    private void DrawThickTick(Canvas canvas, BinaryPaint paint, Vector2 innerPos, Vector2 outerPos) {
+    /**
+     * Draws two ticks next to each other.
+     * @param canvas canvas to draw on
+     * @param paint paint to draw with
+     * @param innerPos start of line
+     * @param outerPos end of line
+     * @param rightOffset adds an additional few pixels to the right tick
+     */
+    private void DrawThickTick(Canvas canvas, BinaryPaint paint, Vector2 innerPos, Vector2 outerPos, float rightOffset) {
         float tickWidth = paint.getStrokeWidth();
         innerPos.x -= tickWidth * 0.25;
         outerPos.x -= tickWidth * 0.25;
         canvas.drawLine(innerPos.x, innerPos.y, outerPos.x, outerPos.y, paint);
-        innerPos.x += tickWidth + 1;
-        outerPos.x += tickWidth + 1;
+        innerPos.x += tickWidth + rightOffset;
+        outerPos.x += tickWidth + rightOffset;
         canvas.drawLine(innerPos.x, innerPos.y, outerPos.x, outerPos.y, paint);
     }
 
