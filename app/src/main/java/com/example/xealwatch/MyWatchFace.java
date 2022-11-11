@@ -111,7 +111,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
 
         private PaintBucket mPaintBucket;
         private BinaryPaint mBackgroundPaint;
-        private final WatchPainter mWatchPainter = new WatchPainter();
+        private WatchPainter mWatchPainter;
 
         private Bitmap mBackgroundBitmap;
         private Bitmap mGrayBackgroundBitmap;
@@ -157,6 +157,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
 
         private void initializeWatchFace() {
             mPaintBucket = new PaintBucket(mWatchHandColor, mWatchHandSecondColor, mWatchTickColor);
+            mWatchPainter = new WatchPainter(mPaintBucket);
         }
 
         @Override
@@ -225,7 +226,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
             if (!mBurnInProtection && !mLowBitAmbient) {
                 initGrayBackgroundBitmap();
             }
-            this.mWatchPainter.cacheBackgrounds(mBackgroundBitmap, mGrayBackgroundBitmap, mPaintBucket);
+            this.mWatchPainter.cacheBackgrounds(mBackgroundBitmap, mGrayBackgroundBitmap);
         }
 
         private void initGrayBackgroundBitmap() {
@@ -285,11 +286,11 @@ public class MyWatchFace extends CanvasWatchFaceService {
         }
 
         private void drawBackground(Canvas canvas) {
-            mWatchPainter.drawBackground(canvas, mCurrentWatchState, mPaintBucket, mChargingStatus);
+            mWatchPainter.drawBackground(canvas, mCurrentWatchState, mChargingStatus);
         }
 
         private void drawWatchFace(Canvas canvas) {
-            mWatchPainter.drawWatchFace(canvas, mPaintBucket, mCalendar, mCurrentWatchState);
+            mWatchPainter.drawWatchFace(canvas,  mCalendar, mCurrentWatchState);
         }
 
         @Override

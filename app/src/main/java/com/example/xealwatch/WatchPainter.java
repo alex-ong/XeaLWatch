@@ -10,6 +10,7 @@ import java.util.Calendar;
 
 public class WatchPainter {
 
+    private final PaintBucket mPaintBucket;
     public Vector2 center = new Vector2(0, 0);
     //Constants defining hand lengths
     private static final float HOUR_HAND_LENGTH = 0.7f;
@@ -33,8 +34,12 @@ public class WatchPainter {
     private Bitmap mCachedBlackBackground = null;
     private final Paint mBlackPaint = new Paint();
 
-    public WatchPainter() {
+    private final DatePainter mDatePainter;
+
+    public WatchPainter(PaintBucket paintBucket) {
         mBlackPaint.setColor(Color.BLACK);
+        mPaintBucket = paintBucket;
+        mDatePainter = new DatePainter(mPaintBucket);
     }
 
     private class TickData {
@@ -52,16 +57,16 @@ public class WatchPainter {
      * @param backgroundBitmap     background image in full colour
      * @param greyBackgroundBitmap background image in greyscale
      */
-    public void cacheBackgrounds(Bitmap backgroundBitmap, Bitmap greyBackgroundBitmap, PaintBucket paint) {
+    public void cacheBackgrounds(Bitmap backgroundBitmap, Bitmap greyBackgroundBitmap) {
         //Generate cached backgrounds
         mRawBackground = backgroundBitmap;
         mRawGreyBackground = greyBackgroundBitmap;
-        mCachedBackground = generateCachedBackground(backgroundBitmap, paint, WatchState.FULL);
-        mCachedGreyBackground = generateCachedBackground(greyBackgroundBitmap, paint, WatchState.GRAY);
-        mCachedBlackBackground = generateCachedBackground(null, paint, WatchState.BLACK);
+        mCachedBackground = generateCachedBackground(backgroundBitmap, WatchState.FULL);
+        mCachedGreyBackground = generateCachedBackground(greyBackgroundBitmap, WatchState.GRAY);
+        mCachedBlackBackground = generateCachedBackground(null, WatchState.BLACK);
     }
 
-    private Bitmap generateCachedBackground(Bitmap backgroundImage, PaintBucket paint, WatchState ws) {
+    private Bitmap generateCachedBackground(Bitmap backgroundImage, WatchState ws) {
         int width = (int) center.x * 2;
         int height = (int) center.y * 2;
 
@@ -71,7 +76,7 @@ public class WatchPainter {
             writingCanvas.drawColor(Color.BLACK);
         else
             writingCanvas.drawBitmap(backgroundImage, 0, 0, mBlackPaint);
-        drawTicks(writingCanvas, new ChargingStatus(), paint, ws);
+        drawTicks(writingCanvas, new ChargingStatus(), ws);
         return result;
     }
 
@@ -97,72 +102,74 @@ public class WatchPainter {
      *
      * This will also color the ticks in green based on charging status.
      */
-    private void drawTicks(Canvas canvas, ChargingStatus chargingStatus, PaintBucket paintBucket, WatchState ws) {
+    private void drawTicks(Canvas canvas, ChargingStatus chargingStatus, WatchState ws) {
         // Set ticks to green if we're charging.
         int stopChargingIndex = GetStopChargingIndex(chargingStatus);
         // Draw black afterwards if we're in ambient.
         boolean drawBlack = ws.ordinal() < WatchState.FULL.ordinal() && !chargingStatus.isCharging;
-        paintBucket.SetTicksActive();
+        mPaintBucket.setTicksActive();
 
         for (int tickIndex = 0; tickIndex < NUM_SECONDS; tickIndex++) {
             if (tickIndex >= stopChargingIndex) {
-                paintBucket.SetTicksInActive();
+                mPaintBucket.setTicksInActive();
             }
             if (tickIndex == 0) {
-                drawTwelveOClock(canvas, drawBlack, paintBucket);
+                drawTwelveOClock(canvas, drawBlack, mPaintBucket);
                 continue;
             }
             boolean isMajor = tickIndex % 5 == 0;
             if (isMajor) {
                 drawTick(canvas, tickData.bigTickRadius, center.x,
-                        tickIndex, paintBucket.getBigTickPaint());
+                        tickIndex, mPaintBucket.getBigTickPaint());
                 // overdraw a black radius
                 if (drawBlack) {
                     drawTick(canvas, tickData.bigInsetRadius, center.x,
-                            tickIndex, paintBucket.getBigTickInsetPaint());
+                            tickIndex, mPaintBucket.getBigTickInsetPaint());
                 }
             } else {
                 drawTick(canvas, tickData.smallTickRadius, tickData.endSmallTickRadius,
-                        tickIndex, paintBucket.getSmallTickPaint());
+                        tickIndex, mPaintBucket.getSmallTickPaint());
             }
         }
         // Fix bug where these are left active
         if (stopChargingIndex >= NUM_SECONDS - 1) {
-            paintBucket.SetTicksInActive();
+            mPaintBucket.setTicksInActive();
         }
     }
 
     /**
      * Draws the Twelve oclock symbol using two lines.
-     * @param canvas canvas
-     * @param drawBlack whether to overlay in black
+     *
+     * @param canvas      canvas
+     * @param drawBlack   whether to overlay in black
      * @param paintBucket paintBucket to draw with
      */
     private void drawTwelveOClock(Canvas canvas, boolean drawBlack, PaintBucket paintBucket) {
         Vector2 innerPos = RotateCoordinate(0, tickData.bigTickRadius - 10);
         Vector2 outerPos = RotateCoordinate(0, center.x);
-        DrawThickTick(canvas, paintBucket.getBigTickPaint(), innerPos, outerPos, 0);
+        DrawThickTick(canvas, paintBucket.getBigTickPaint(), innerPos, outerPos, -1,1);
 
         // overdraw a black radius
         if (drawBlack) {
             innerPos = RotateCoordinate(0, tickData.bigInsetRadius - 10);
             outerPos = RotateCoordinate(0, center.x);
-            DrawThickTick(canvas, paintBucket.getBigTickInsetPaint(), innerPos, outerPos, 1);
+            DrawThickTick(canvas, paintBucket.getBigTickInsetPaint(), innerPos, outerPos, -2,3);
         }
     }
 
     /**
      * Draws two ticks next to each other.
-     * @param canvas canvas to draw on
-     * @param paint paint to draw with
-     * @param innerPos start of line
-     * @param outerPos end of line
+     *
+     * @param canvas      canvas to draw on
+     * @param paint       paint to draw with
+     * @param innerPos    start of line
+     * @param outerPos    end of line
      * @param rightOffset adds an additional few pixels to the right tick
      */
-    private void DrawThickTick(Canvas canvas, BinaryPaint paint, Vector2 innerPos, Vector2 outerPos, float rightOffset) {
+    private void DrawThickTick(Canvas canvas, BinaryPaint paint, Vector2 innerPos, Vector2 outerPos, float leftOffset, float rightOffset) {
         float tickWidth = paint.getStrokeWidth();
-        innerPos.x -= tickWidth * 0.25;
-        outerPos.x -= tickWidth * 0.25;
+        innerPos.x -= tickWidth * 0.5 - leftOffset;
+        outerPos.x -= tickWidth * 0.5 - leftOffset;
         canvas.drawLine(innerPos.x, innerPos.y, outerPos.x, outerPos.y, paint);
         innerPos.x += tickWidth + rightOffset;
         outerPos.x += tickWidth + rightOffset;
@@ -191,9 +198,8 @@ public class WatchPainter {
      * @param canvas       Canvas to draw on
      * @param ws           the watch's watch-state
      * @param chargeStatus if the watch is charging
-     * @param paintBucket  a collection of paints to use
      */
-    public void drawBackground(Canvas canvas, WatchState ws, PaintBucket paintBucket, ChargingStatus chargeStatus) {
+    public void drawBackground(Canvas canvas, WatchState ws, ChargingStatus chargeStatus) {
         // Draw the raw background, then draw the ticks manually
         if (chargeStatus.isCharging) {
             if (ws == WatchState.BLACK) {
@@ -203,7 +209,7 @@ public class WatchPainter {
             } else {
                 canvas.drawBitmap(mRawBackground, 0, 0, mBlackPaint);
             }
-            drawTicks(canvas, chargeStatus, paintBucket, ws);
+            drawTicks(canvas, chargeStatus, ws);
         } else { // draw the background including ticks from cache.
             if (ws == WatchState.BLACK) {
                 canvas.drawBitmap(mCachedBlackBackground, 0, 0, mBlackPaint);
@@ -219,11 +225,10 @@ public class WatchPainter {
      * Draws the hands and date
      *
      * @param canvas      Canvas to draw on
-     * @param paintBucket Collection of paints to draw with
      * @param calendar    Current Date/Time
      * @param ws          Current watchState
      */
-    public void drawWatchFace(Canvas canvas, PaintBucket paintBucket, Calendar calendar, WatchState ws) {
+    public void drawWatchFace(Canvas canvas, Calendar calendar, WatchState ws) {
         /*
          * These calculations reflect the rotation in degrees per unit of time, e.g.,
          * 360 / 60 = 6 and 360 / 12 = 30.
@@ -241,16 +246,20 @@ public class WatchPainter {
         Vector2 secondStart = RotateCoordinate(180 + secondsRotation, mSecondHandLength2);
         Vector2 secondEnd = RotateCoordinate(secondsRotation, mSecondHandLength);
 
-        paintBucket.DrawHour(canvas, hourStart, hourEnd);
-        paintBucket.DrawMinute(canvas, minuteStart, minuteEnd);
+        DrawLine(canvas, hourStart, hourEnd, mPaintBucket.getHourPaint());
+        DrawLine(canvas, minuteStart, minuteEnd, mPaintBucket.getMinutePaint());
         if (ws == WatchState.FULL) {
-            paintBucket.DrawSecond(canvas, secondStart, secondEnd);
-            canvas.drawCircle(center.x, center.y, CENTER_GAP_AND_CIRCLE_RADIUS, paintBucket.getSecondPaint());
+            DrawLine(canvas, secondStart, secondEnd, mPaintBucket.getSecondPaint());
+            canvas.drawCircle(center.x, center.y, CENTER_GAP_AND_CIRCLE_RADIUS, mPaintBucket.getSecondPaint());
         } else { //draw black over the hour and minute hand
-            paintBucket.DrawHourInset(canvas, hourStart, hourEnd);
-            paintBucket.DrawMinuteInset(canvas, minuteStart, minuteEnd);
-            canvas.drawCircle(center.x, center.y, CENTER_GAP_AND_CIRCLE_RADIUS, paintBucket.getSmallTickPaint());
+            DrawLine(canvas, hourStart,hourEnd, mPaintBucket.getHourInsetPaint());
+            DrawLine(canvas, minuteStart, minuteEnd, mPaintBucket.getMinuteInsetPaint());
+            canvas.drawCircle(center.x, center.y, CENTER_GAP_AND_CIRCLE_RADIUS, mPaintBucket.getSmallTickPaint());
         }
+    }
+
+    private void DrawLine(Canvas canvas, Vector2 start, Vector2 end, BinaryPaint paint) {
+        canvas.drawLine(start.x, start.y, end.x, end.y, paint);
     }
 
     /**

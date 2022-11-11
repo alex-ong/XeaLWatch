@@ -3,6 +3,7 @@ package com.example.xealwatch;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Typeface;
 
 public class PaintBucket {
     private final BinaryPaint mHourPaint;
@@ -16,11 +17,16 @@ public class PaintBucket {
     private final BinaryPaint mBigTickPaint;
     private final BinaryPaint mBigTickInsetPaint;
 
+    private final BinaryPaint mDatePaint;
+    private final BinaryPaint mDateInsetPaint;
+    private final BinaryPaint mDateTextPaint;
+
     private static final float HOUR_STROKE_WIDTH = 15f;
     private static final float MINUTE_STROKE_WIDTH = 10f;
     private static final float SECOND_STROKE_WIDTH = 5f;
-    private static final float LARGE_SECOND_TICK_STROKE_WIDTH = 14f;
+    private static final float LARGE_SECOND_TICK_STROKE_WIDTH = 16f;
     private static final float SMALL_SECOND_TICK_STROKE_WIDTH = 2f;
+
 
     public PaintBucket(int watchHandColor, int watchHandSecondColor, int watchTickColor) {
         mHourPaint = new BinaryPaint();
@@ -48,6 +54,19 @@ public class PaintBucket {
         mBigTickInsetPaint = new BinaryPaint();
         mBigTickInsetPaint.initializeActive(watchTickColor, (LARGE_SECOND_TICK_STROKE_WIDTH - 2), Paint.Cap.BUTT, Paint.Style.STROKE);
         mBigTickInsetPaint.initializeInactive(Color.BLACK, Paint.Style.STROKE);
+
+        mDateInsetPaint = new BinaryPaint();
+        mDateInsetPaint.initializeActive(Color.BLACK, 2, Paint.Cap.BUTT, Paint.Style.FILL);
+
+        mDatePaint = new BinaryPaint();
+        mDatePaint.initializeActive(Color.WHITE, 1, Paint.Cap.BUTT, Paint.Style.FILL);
+
+        mDateTextPaint = new BinaryPaint();
+        mDateTextPaint.initializeActive(Color.WHITE, 2, Paint.Cap.BUTT, Paint.Style.STROKE);
+        mDateTextPaint.setTextSize(5);
+        mDateTextPaint.setTypeface(Typeface.DEFAULT);
+        mDateTextPaint.setTextAlign(Paint.Align.CENTER);
+
     }
 
     public BinaryPaint getHourPaint() {
@@ -64,6 +83,14 @@ public class PaintBucket {
 
     public BinaryPaint getSmallTickPaint() {
         return mSmallTickPaint;
+    }
+
+    public BinaryPaint getHourInsetPaint() {
+        return mHourInsetPaint;
+    }
+
+    public BinaryPaint getMinuteInsetPaint() {
+        return mMinuteInsetPaint;
     }
 
     public BinaryPaint getBigTickPaint() {
@@ -108,6 +135,7 @@ public class PaintBucket {
 
     /**
      * Reduces alpha of the hands when we are in mute mode
+     *
      * @param inMuteMode whether to mute the colors
      */
     public void setMuteMode(boolean inMuteMode) {
@@ -116,17 +144,27 @@ public class PaintBucket {
         mSecondPaint.setAlpha(inMuteMode ? 80 : 255);
     }
 
-    public void SetTicksInActive()
-    {
+    public void setTicksInActive() {
         mBigTickPaint.setInactive();
         mBigTickInsetPaint.setInactive();
         mSmallTickPaint.setInactive();
     }
 
-    public void SetTicksActive()
-    {
+    public void setTicksActive() {
         mBigTickPaint.setActive();
         mBigTickInsetPaint.setActive();
         mSmallTickPaint.setActive();
+    }
+
+    public BinaryPaint getDatePaint() {
+        return mDatePaint;
+    }
+
+    public BinaryPaint getDateInsetPaint() {
+        return mDateInsetPaint;
+    }
+
+    public BinaryPaint getDateTextPaint() {
+        return mDateTextPaint;
     }
 }
