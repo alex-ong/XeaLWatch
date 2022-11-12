@@ -21,7 +21,7 @@ public class DatePainter {
         mDateCenter.y = height - heightOffset;
     }
 
-    public void DrawDate(Canvas canvas, Calendar calendar) {
+    public void DrawDate(Canvas canvas, int date) {
         BinaryPaint datePaint = mPaintBucket.getDatePaint();
         BinaryPaint dateInsetPaint = mPaintBucket.getDateInsetPaint();
         BinaryPaint dateTextPaint = mPaintBucket.getDateTextPaint();
@@ -37,7 +37,7 @@ public class DatePainter {
         box.right -= 1;
         canvas.drawRect(box, dateInsetPaint);
 
-        String dayOfMonth = String.valueOf(calendar.get(Calendar.DAY_OF_MONTH));
+        String dayOfMonth = String.valueOf(date);
         Rect result = new Rect();
         dateTextPaint.getTextBounds(dayOfMonth, 0, dayOfMonth.length(), result);
         canvas.drawText(dayOfMonth, mDateCenter.x, mDateCenter.y + result.height() / 2f, dateTextPaint);

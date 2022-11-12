@@ -224,7 +224,8 @@ public class MyWatchFace extends CanvasWatchFaceService {
             if (!mBurnInProtection && !mLowBitAmbient) {
                 initGrayBackgroundBitmap();
             }
-            this.mWatchPainter.cacheBackgrounds(mBackgroundBitmap, mGrayBackgroundBitmap);
+            int date = mCalendar.get(Calendar.DATE);
+            this.mWatchPainter.cacheBackgrounds(mBackgroundBitmap, mGrayBackgroundBitmap, date);
         }
 
         private void initGrayBackgroundBitmap() {
@@ -284,7 +285,8 @@ public class MyWatchFace extends CanvasWatchFaceService {
         }
 
         private void drawBackground(Canvas canvas) {
-            mWatchPainter.drawBackground(canvas, mCurrentWatchState, mChargingStatus);
+            int date = mCalendar.get(Calendar.DATE);
+            mWatchPainter.drawBackground(canvas, mCurrentWatchState, mChargingStatus, date);
         }
 
         private void drawWatchFace(Canvas canvas) {
