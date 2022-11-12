@@ -3,28 +3,33 @@ package com.example.xealwatch;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 
+import java.util.Calendar;
+
 public class DatePainter {
-    PaintBucket mPaintBucket;
-    Vector2 mDateCenter = new Vector2();
+    final PaintBucket mPaintBucket;
+    final Vector2 mDateCenter = new Vector2();
+    final int height = 18;
+    final int width = 20;
+    final int heightOffset = 50;
 
     public DatePainter(PaintBucket paintBucket) {
         mPaintBucket = paintBucket;
     }
 
     public void OnCanvasChange(int width, int height) {
-        mDateCenter.x = width / 2;
-        mDateCenter.y = height - 30;
+        mDateCenter.x = width / 2f;
+        mDateCenter.y = height - heightOffset;
     }
 
-    public void DrawDate(Canvas canvas) {
+    public void DrawDate(Canvas canvas, Calendar calendar) {
         BinaryPaint datePaint = mPaintBucket.getDatePaint();
         BinaryPaint dateInsetPaint = mPaintBucket.getDateInsetPaint();
         BinaryPaint dateTextPaint = mPaintBucket.getDateTextPaint();
 
-        Rect box = new Rect((int) mDateCenter.x - 15,
-                (int) mDateCenter.y - 10,
-                (int) mDateCenter.x + 15,
-                (int) mDateCenter.y + 10);
+        Rect box = new Rect((int) mDateCenter.x - width,
+                (int) mDateCenter.y - height,
+                (int) mDateCenter.x + width,
+                (int) mDateCenter.y + height);
         canvas.drawRect(box, datePaint);
         box.left += 1;
         box.top += 1;
@@ -32,8 +37,9 @@ public class DatePainter {
         box.right -= 1;
         canvas.drawRect(box, dateInsetPaint);
 
-
-        canvas.drawText("29", mDateCenter.x, mDateCenter.y, dateTextPaint);
-
+        String dayOfMonth = String.valueOf(calendar.get(Calendar.DAY_OF_MONTH));
+        Rect result = new Rect();
+        dateTextPaint.getTextBounds(dayOfMonth, 0, dayOfMonth.length(), result);
+        canvas.drawText(dayOfMonth, mDateCenter.x, mDateCenter.y + result.height() / 2f, dateTextPaint);
     }
 }

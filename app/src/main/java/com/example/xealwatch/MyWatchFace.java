@@ -12,6 +12,7 @@ import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -133,6 +134,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
 
             initializeBackground();
             initializeWatchFace();
+
         }
 
         private void initializeBackground() {

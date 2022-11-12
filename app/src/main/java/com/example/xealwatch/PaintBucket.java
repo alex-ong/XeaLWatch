@@ -1,5 +1,6 @@
 package com.example.xealwatch;
 
+import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -26,8 +27,6 @@ public class PaintBucket {
     private static final float SECOND_STROKE_WIDTH = 5f;
     private static final float LARGE_SECOND_TICK_STROKE_WIDTH = 16f;
     private static final float SMALL_SECOND_TICK_STROKE_WIDTH = 2f;
-
-
     public PaintBucket(int watchHandColor, int watchHandSecondColor, int watchTickColor) {
         mHourPaint = new BinaryPaint();
         mHourPaint.initializeActive(watchHandColor, HOUR_STROKE_WIDTH, Paint.Cap.ROUND, Paint.Style.FILL);
@@ -62,9 +61,9 @@ public class PaintBucket {
         mDatePaint.initializeActive(Color.WHITE, 1, Paint.Cap.BUTT, Paint.Style.FILL);
 
         mDateTextPaint = new BinaryPaint();
-        mDateTextPaint.initializeActive(Color.WHITE, 2, Paint.Cap.BUTT, Paint.Style.STROKE);
-        mDateTextPaint.setTextSize(5);
-        mDateTextPaint.setTypeface(Typeface.DEFAULT);
+        mDateTextPaint.initializeActive(Color.WHITE, 2, Paint.Cap.BUTT, Paint.Style.FILL);
+        mDateTextPaint.setTextSize(30);
+
         mDateTextPaint.setTextAlign(Paint.Align.CENTER);
 
     }

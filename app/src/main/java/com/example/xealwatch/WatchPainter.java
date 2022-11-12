@@ -42,7 +42,7 @@ public class WatchPainter {
         mDatePainter = new DatePainter(mPaintBucket);
     }
 
-    private class TickData {
+    private static class TickData {
         public float smallTickRadius;
         public float endSmallTickRadius;
         public float bigTickRadius;
@@ -138,7 +138,7 @@ public class WatchPainter {
     }
 
     /**
-     * Draws the Twelve oclock symbol using two lines.
+     * Draws the Twelve o'clock symbol using two lines.
      *
      * @param canvas      canvas
      * @param drawBlack   whether to overlay in black
@@ -147,13 +147,13 @@ public class WatchPainter {
     private void drawTwelveOClock(Canvas canvas, boolean drawBlack, PaintBucket paintBucket) {
         Vector2 innerPos = RotateCoordinate(0, tickData.bigTickRadius - 10);
         Vector2 outerPos = RotateCoordinate(0, center.x);
-        DrawThickTick(canvas, paintBucket.getBigTickPaint(), innerPos, outerPos, -1,1);
+        DrawThickTick(canvas, paintBucket.getBigTickPaint(), innerPos, outerPos, -1, 1);
 
         // overdraw a black radius
         if (drawBlack) {
             innerPos = RotateCoordinate(0, tickData.bigInsetRadius - 10);
             outerPos = RotateCoordinate(0, center.x);
-            DrawThickTick(canvas, paintBucket.getBigTickInsetPaint(), innerPos, outerPos, -2,3);
+            DrawThickTick(canvas, paintBucket.getBigTickInsetPaint(), innerPos, outerPos, -2, 3);
         }
     }
 
@@ -224,11 +224,12 @@ public class WatchPainter {
     /**
      * Draws the hands and date
      *
-     * @param canvas      Canvas to draw on
-     * @param calendar    Current Date/Time
-     * @param ws          Current watchState
+     * @param canvas   Canvas to draw on
+     * @param calendar Current Date/Time
+     * @param ws       Current watchState
      */
     public void drawWatchFace(Canvas canvas, Calendar calendar, WatchState ws) {
+        mDatePainter.DrawDate(canvas, calendar);
         /*
          * These calculations reflect the rotation in degrees per unit of time, e.g.,
          * 360 / 60 = 6 and 360 / 12 = 30.
@@ -252,7 +253,7 @@ public class WatchPainter {
             DrawLine(canvas, secondStart, secondEnd, mPaintBucket.getSecondPaint());
             canvas.drawCircle(center.x, center.y, CENTER_GAP_AND_CIRCLE_RADIUS, mPaintBucket.getSecondPaint());
         } else { //draw black over the hour and minute hand
-            DrawLine(canvas, hourStart,hourEnd, mPaintBucket.getHourInsetPaint());
+            DrawLine(canvas, hourStart, hourEnd, mPaintBucket.getHourInsetPaint());
             DrawLine(canvas, minuteStart, minuteEnd, mPaintBucket.getMinuteInsetPaint());
             canvas.drawCircle(center.x, center.y, CENTER_GAP_AND_CIRCLE_RADIUS, mPaintBucket.getSmallTickPaint());
         }
@@ -289,5 +290,10 @@ public class WatchPainter {
         tickData.endSmallTickRadius = center.x - 10;
         tickData.bigTickRadius = center.x - 25;
         tickData.bigInsetRadius = center.x - 24;
+
+        /*
+         * Update any dependencies
+         */
+        mDatePainter.OnCanvasChange(width, height);
     }
 }
