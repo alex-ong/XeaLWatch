@@ -1,10 +1,7 @@
 package com.example.xealwatch;
 
-import android.content.Context;
-import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Typeface;
 
 public class PaintBucket {
     private final BinaryPaint mHourPaint;
@@ -27,6 +24,7 @@ public class PaintBucket {
     private static final float SECOND_STROKE_WIDTH = 5f;
     private static final float LARGE_SECOND_TICK_STROKE_WIDTH = 16f;
     private static final float SMALL_SECOND_TICK_STROKE_WIDTH = 2f;
+
     public PaintBucket(int watchHandColor, int watchHandSecondColor, int watchTickColor) {
         mHourPaint = new BinaryPaint();
         mHourPaint.initializeActive(watchHandColor, HOUR_STROKE_WIDTH, Paint.Cap.ROUND, Paint.Style.FILL);
@@ -101,30 +99,10 @@ public class PaintBucket {
     }
 
 
-    public void DrawHour(Canvas canvas, Vector2 start, Vector2 end) {
-        canvas.drawLine(start.x, start.y, end.x, end.y, mHourPaint);
-    }
-
-    public void DrawMinute(Canvas canvas, Vector2 start, Vector2 end) {
-        canvas.drawLine(start.x, start.y, end.x, end.y, mMinutePaint);
-    }
-
-    public void DrawSecond(Canvas canvas, Vector2 start, Vector2 end) {
-        canvas.drawLine(start.x, start.y, end.x, end.y, mSecondPaint);
-    }
-
-    public void DrawHourInset(Canvas canvas, Vector2 start, Vector2 end) {
-        canvas.drawLine(start.x, start.y, end.x, end.y, mHourInsetPaint);
-    }
-
-    public void DrawMinuteInset(Canvas canvas, Vector2 start, Vector2 end) {
-        canvas.drawLine(start.x, start.y, end.x, end.y, mMinuteInsetPaint);
-    }
-
     /**
      * Updates watch-hand styles based on if we're ambient
      *
-     * @param isAmbient
+     * @param isAmbient whether we are in ambient mode
      */
     public void updateWatchHandStyles(boolean isAmbient) {
         for (BinaryPaint paint : new BinaryPaint[]{mHourPaint, mMinutePaint, mSecondPaint}) {

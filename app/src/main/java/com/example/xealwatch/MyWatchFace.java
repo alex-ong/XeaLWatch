@@ -12,7 +12,6 @@ import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -23,7 +22,6 @@ import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.view.SurfaceHolder;
-import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
 import java.util.Calendar;
@@ -108,10 +106,9 @@ public class MyWatchFace extends CanvasWatchFaceService {
         /* Colors for all hands (hour, minute, seconds, ticks) based on photo loaded. */
         private int mWatchHandColor = Color.WHITE;
         private int mWatchHandSecondColor = Color.RED;
-        private int mWatchTickColor = Color.GREEN; // green while charging.
+        private final int mWatchTickColor = Color.GREEN; // green while charging.
 
         private PaintBucket mPaintBucket;
-        private BinaryPaint mBackgroundPaint;
         private WatchPainter mWatchPainter;
 
         private Bitmap mBackgroundBitmap;
@@ -138,10 +135,9 @@ public class MyWatchFace extends CanvasWatchFaceService {
         }
 
         private void initializeBackground() {
-            mBackgroundPaint = new BinaryPaint();
+            BinaryPaint mBackgroundPaint = new BinaryPaint();
             mBackgroundPaint.setColor(Color.BLACK);
             mBackgroundBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.watchface_service_bg);
-            //setAutoHandColor();
         }
 
         /**

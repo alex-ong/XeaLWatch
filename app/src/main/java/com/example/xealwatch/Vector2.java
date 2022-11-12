@@ -15,17 +15,6 @@ public class Vector2 {
     /**
      * Adds an offset to this vector's values
      *
-     * @param x
-     * @param y
-     */
-    public void addOffset(float x, float y) {
-        this.x += x;
-        this.y += y;
-    }
-
-    /**
-     * Adds an offset to this vector's values
-     *
      * @param other another vector
      */
     public void addOffset(Vector2 other) {
